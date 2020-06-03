@@ -12,4 +12,4 @@ Hover over it in your inventory and it should say "#0" or any number. This is th
 If you want to reset all the maps, then delete any files in `data/` that start with `map_` and `idcounts.dat` (which holds the newest map id)
 
 # Example
-![Andromeda viewed in a map](https://github.com/bneils/minecraft-map-maker/blob/master/andromeda.png)
+![Andromeda viewed in a map](https://github.com/bneils/minecraft-map-maker/blob/master/andromeda_example.png)
