@@ -1,3 +1,4 @@
 colormath
 numpy
 Pillow
+nbt
