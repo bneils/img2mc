@@ -17,7 +17,7 @@ with open('lab_colors.json') as f:
     lab_colors = load(f)
 
 
-def mapimage(image):
+def mapnbt(image):
     # Minecraft maps must fit in a 128x128 pixel area
     image = image.resize((128, 128), Image.LANCZOS)
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     except FileNotFoundError as e:
         sys.exit(e)
     
-    nbtfile = mapimage(image)
+    nbtfile = mapnbt(image)
 
     try:
         nbtfile.write_file(os.path.join(args.dir,'map_%d.dat' % args.num))
