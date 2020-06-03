@@ -2,7 +2,7 @@
 Converts images to Minecraft maps.
 
 # Command-line interface
-The program is CLI-friendly, simply invoke with `py mapped.py <file-path> <map-#>`.
+The program is modular and CLI-friendly, simply invoke with `py mapped.py <file-path> <map-#>`.
 <br>You are also allowed to specify the directory to save it in with the `--dir` option.
 
 # How do I view it now that it's been generated?
