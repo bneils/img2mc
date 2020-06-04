@@ -18,6 +18,7 @@ with open('lab_colors.json') as f:
 
 
 def imagenbt(image):
+    """Creates a generator that yields NBT map(s) from an image"""
     # Extract frame(s) from image
     if image.is_animated:
         frames = []
@@ -70,8 +71,6 @@ def imagenbt(image):
         imageData.value = mapColorIds
         data.tags.append(imageData)
 
-        if len(frames) == 1:
-            return nbtfile
         yield nbtfile
 
 
@@ -94,7 +93,7 @@ if __name__ == '__main__':
                 frame.write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
                 args.num += 1
         else:
-            imagenbt(image).write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
+            list(imagenbt(image))[0].write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
             
     except FileNotFoundError as e:
         sys.exit(e)
