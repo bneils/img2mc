@@ -1,5 +1,5 @@
 # minecraft-map-maker
-Converts images to Minecraft maps.
+Converts images to Minecraft maps. It allows you to pass GIFs which generate several dat files.
 
 # Command-line interface
 The program is modular and CLI-friendly, simply invoke with `py mapped.py <file-path> <map-#>`.
