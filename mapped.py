@@ -6,6 +6,7 @@ from colormath.color_diff_matrix import delta_e_cie1976 as delta_e
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
 from PIL import Image
+#from PIL import GifImagePlugin
 from nbt.nbt import *
 from numpy import array, argmin
 from argparse import ArgumentParser
@@ -17,49 +18,62 @@ with open('lab_colors.json') as f:
     lab_colors = load(f)
 
 
-def mapnbt(image):
-    # Minecraft maps must fit in a 128x128 pixel area
-    image = image.resize((128, 128), Image.LANCZOS)
+def imagenbt(image):
+    # Extract frame(s) from image
+    if image.is_animated:
+        frames = []
+        for i in range(image.n_frames):
+            image.seek(i)
+            frames.append(image.copy())
+    else:
+        frames = [image]
 
-    if image.mode != 'RGBA':
-        image = image.convert('RGBA')
-    alpha_channel = image.getchannel(3).getdata()
-    image = image.convert('P')
-    
-    palette = array(image.getpalette()).reshape(256, 3)
+    # Loop through frame(s)
+    for frame in frames:
+        # Minecraft maps must fit in a 128x128 pixel area
+        frame = frame.resize((128, 128), Image.LANCZOS)
 
-    index_to_id = [argmin(delta_e(array(convert_color(sRGBColor(*rgb), LabColor).get_value_tuple()),
-			lab_colors)) + 4
-                    for rgb in palette]
+        if frame.mode != 'RGBA':
+            frame = frame.convert('RGBA')
+        alpha_channel = frame.getchannel(3).getdata()
+        frame = frame.convert('P')
+        
+        palette = array(frame.getpalette()).reshape(256, 3)
 
-    # Collect a list of map color ids by finding the closest color's indice (4 is added due to the absent transparent values at 0-3)
-    mapColorIds = [index_to_id[index] if alpha else 0 for index, alpha in zip(image.getdata(), alpha_channel)]
+        index_to_id = [argmin(delta_e(array(convert_color(sRGBColor(*rgb), LabColor).get_value_tuple()),
+                            lab_colors)) + 4
+                        for rgb in palette]
 
-    # Begin constructing the NBT file at https://minecraft.gamepedia.com/Map_item_format#map_.3C.23.3E.dat_format
-    nbtfile = NBTFile()
-    nbtfile.name = "root"
+        # Collect a list of map color ids by finding the closest color's indice (4 is added due to the absent transparent values at 0-3)
+        mapColorIds = [index_to_id[index] if alpha else 0 for index, alpha in zip(frame.getdata(), alpha_channel)]
 
-    data = TAG_Compound()
-    data.name = "data"  # only works if on a separate line
-    nbtfile.tags.append(data)
-    
-    data.tags.extend([
-        TAG_Byte(name = "scale", value = 0),
-        TAG_Byte(name = "dimension", value = 0),
-        TAG_Byte(name = "locked", value = 1),
-        TAG_Byte(name = "trackingPosition", value = 0),
-        TAG_Int(name = "xCenter", value = 0),
-        TAG_Int(name = "zCenter", value = 0),
-        TAG_Short(name = "height", value = 128),
-        TAG_Short(name = "width", value = 128)
-    ])
+        # Begin constructing the NBT file at https://minecraft.gamepedia.com/Map_item_format#map_.3C.23.3E.dat_format
+        nbtfile = NBTFile()
+        nbtfile.name = "root"
 
-    # Load image data
-    imageData = TAG_Byte_Array(name = "colors")
-    imageData.value = mapColorIds
-    data.tags.append(imageData)
+        data = TAG_Compound()
+        data.name = "data"  # only works if on a separate line
+        nbtfile.tags.append(data)
+        
+        data.tags.extend([
+            TAG_Byte(name = "scale", value = 0),
+            TAG_Byte(name = "dimension", value = 0),
+            TAG_Byte(name = "locked", value = 1),
+            TAG_Byte(name = "trackingPosition", value = 0),
+            TAG_Int(name = "xCenter", value = 0),
+            TAG_Int(name = "zCenter", value = 0),
+            TAG_Short(name = "height", value = 128),
+            TAG_Short(name = "width", value = 128)
+        ])
 
-    return nbtfile
+        # Load image data
+        imageData = TAG_Byte_Array(name = "colors")
+        imageData.value = mapColorIds
+        data.tags.append(imageData)
+
+        if len(frames) == 1:
+            return nbtfile
+        yield nbtfile
 
 
 if __name__ == '__main__':
@@ -74,10 +88,11 @@ if __name__ == '__main__':
         image = Image.open(args.fp)
     except FileNotFoundError as e:
         sys.exit(e)
-    
-    nbtfile = mapnbt(image)
 
     try:
-        nbtfile.write_file(os.path.join(args.dir,'map_%d.dat' % args.num))
+        for frame in imagenbt(image):
+            frame.write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
+            args.num += 1
+            
     except FileNotFoundError as e:
         sys.exit(e)
