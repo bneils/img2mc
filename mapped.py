@@ -6,7 +6,6 @@ from colormath.color_diff_matrix import delta_e_cie1976 as delta_e
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
 from PIL import Image
-#from PIL import GifImagePlugin
 from nbt.nbt import *
 from numpy import array, argmin
 from argparse import ArgumentParser
@@ -41,10 +40,10 @@ def imagenbt(image):
         palette = array(frame.getpalette()).reshape(256, 3)
 
         index_to_id = [argmin(delta_e(array(convert_color(sRGBColor(*rgb), LabColor).get_value_tuple()),
-                            lab_colors)) + 4
+                            lab_colors)) + 4    # (4 is added due to the absent transparent values at 0-3)
                         for rgb in palette]
 
-        # Collect a list of map color ids by finding the closest color's indice (4 is added due to the absent transparent values at 0-3)
+        # Collect a list of map color ids by finding the closest color's indice 
         mapColorIds = [index_to_id[index] if alpha else 0 for index, alpha in zip(frame.getdata(), alpha_channel)]
 
         # Begin constructing the NBT file at https://minecraft.gamepedia.com/Map_item_format#map_.3C.23.3E.dat_format
