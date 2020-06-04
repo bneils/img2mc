@@ -13,3 +13,6 @@ If you want to reset all the maps, then delete any files in `data/` that start w
 
 # Example
 ![Andromeda viewed in a map](https://github.com/bneils/minecraft-map-maker/blob/master/andromeda_example.png)
+
+# WIP
+Image partitioning will be available soon.
