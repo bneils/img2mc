@@ -90,9 +90,12 @@ if __name__ == '__main__':
         sys.exit(e)
 
     try:
-        for frame in imagenbt(image):
-            frame.write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
-            args.num += 1
+        if image.is_animated:
+            for frame in imagenbt(image):
+                frame.write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
+                args.num += 1
+        else:
+            imagenbt(image).write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
             
     except FileNotFoundError as e:
         sys.exit(e)
