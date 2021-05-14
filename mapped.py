@@ -18,7 +18,7 @@ with open('dev-tools/palette.csv') as f:
     palimage.putpalette(channels)
     numColors = len(channels) // 3
 
-def imagenbt(image, findBestFit=None, alpha_threshold=128, box_n=(1, 1)):
+def imagenbt(image, findBestFit=0, alpha_threshold=128, box_n=(1, 1)):
     """Creates a generator that yields NBT map(s) from an image"""
     
     # Extract frame(s) from image
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('-y', '--y-box-n', metavar='Y', default=1, type=int, help="how many vertical maps to split the image into.")
     parser.add_argument('-q', '--quiet', action='store_true', default=False, help="is used to remove the progress bar")
     parser.add_argument('-a', '--alpha-threshold', metavar='N', default=128, type=int, help="the minimum alpha value for a value to be considered opaque. Default is 128.")
-    parser.add_argument('-f', '--fit', metavar='S', default=-1, type=int, help="find best fit, takes scale, does nothing if not positive")
+    parser.add_argument('-f', '--fit', metavar='S', default=0, type=int, help="find best fit, takes scale, does nothing if not positive")
 
     args = parser.parse_args()
 

@@ -13,7 +13,7 @@ def resize_image_dim(image, width=None, height=None):
     return image
 
 
-def partition_image(image, fitScale=None, box_dim=(2, 2)):
+def partition_image(image, fitScale=0, box_dim=(2, 2)):
     """Takes in a (x, y) box count, which both default to 2"""
     
     x_width, y_width = box_dim
