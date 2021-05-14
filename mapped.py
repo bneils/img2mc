@@ -2,7 +2,6 @@
 __author__ = "Ben Neilsen"
 
 from PIL import Image
-from nbt.nbt import *
 from argparse import ArgumentParser
 from tqdm import tqdm
 import csv
@@ -18,7 +17,7 @@ with open('dev-tools/palette.csv') as f:
     palimage.putpalette(channels)
     numColors = len(channels) // 3
 
-def imagenbt(image, findBestFit=0, alpha_threshold=128, box_n=(1, 1)):
+def imagenbt(image, fitScale=0, alpha_threshold=128, box_n=(1, 1)):
     """Creates a generator that yields NBT map(s) from an image"""
     
     # Extract frame(s) from image
@@ -26,49 +25,19 @@ def imagenbt(image, findBestFit=0, alpha_threshold=128, box_n=(1, 1)):
         frames = []
         for i in range(image.n_frames):
             image.seek(i)
-            frames += partition_image(image.copy(), findBestFit, box_n)
+            frame = image.copy()
+            frames += partitionAndMap(frame, palimage, fitScale, box_n)
     else:
-        frames = partition_image(image, findBestFit, box_n)
+        frames = partitionAndMap(image, palimage, fitScale, box_n)
 
     # Loop through frame(s)
     for frame in tqdm(frames):
-        alpha_channel = frame.getdata(3)
-        
-        # Collect a list of map color ids by finding the closest color's indice 
-        mapColorIds = frame.convert('RGB').quantize(palette=palimage, colors=208)
-
         # Correct the list of map color ids (since it's not perfect)
         # ID 34 is snow or (255,255,255).
         # Since the palette only has 230ish colors (with the rest being (255,255,255), indices greater than 207 must be set to 34)
-        mapColorIds = [(index if index < numColors else 34) if alpha >= alpha_threshold else 0 for index, alpha in zip(mapColorIds.getdata(), alpha_channel)]
-        
-        # Begin constructing the NBT file described at https://minecraft.gamepedia.com/Map_item_format#map_.3C.23.3E.dat_format
-        nbtfile = NBTFile()
-        nbtfile.name = "root"
-
-        data = TAG_Compound()
-        data.name = "data"  # only works if on a separate line
-        nbtfile.tags.append(data)
-        
-        data.tags.extend([
-            TAG_Byte(name = "scale", value = 0),
-            TAG_Byte(name = "dimension", value = 0),
-            TAG_Byte(name = "locked", value = 1),
-            TAG_Byte(name = "trackingPosition", value = 0),
-            TAG_Int(name = "xCenter", value = 0),
-            TAG_Int(name = "zCenter", value = 0),
-            TAG_Short(name = "height", value = 128),
-            TAG_Short(name = "width", value = 128),
-        ])
-
-        # Load image data
-        imageData = TAG_Byte_Array(name = "colors")
-        imageData.value = mapColorIds
-        data.tags.append(imageData)
-
-        frame.close()
-        yield nbtfile
-
+        yield create_map(
+            [(i if i < numColors else 34) if alpha >= alpha_threshold else 0 for i, alpha in zip(*frame)]
+        )
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -89,6 +58,7 @@ if __name__ == '__main__':
 
     try:
         image = Image.open(args.fp)
+        image.load()
     except FileNotFoundError as e:
         sys.exit(e)
 
@@ -98,7 +68,6 @@ if __name__ == '__main__':
             args.num += 1
     
     except (FileNotFoundError, KeyboardInterrupt) as e:
-        image.close()
         sys.exit(e)
-        
-    image.close()
+    finally:
+        image.close()
