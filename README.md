@@ -1,17 +1,18 @@
 # minecraft-map-maker
 Converts images to custom Minecraft maps.
 
-- [x] CLI-friendly with progressbar
-- [x] Efficient color comparisons
+- [x] CLI-friendly with progressbar (tqdm)
+- [x] Efficient color comparisons (PIL)
 - [x] Modular
-- [x] GIF support
-- [x] Partition support
+- [x] GIF support (process each frame)
+- [x] Scalable to multiple item frames
 - [x] Dithered
+- [x] Easy to update color palette for new versions of Minecraft
 
 # Command-line interface
-Simply invoke with `py mapped.py <file-path> <map-#>`.
+Simply invoke with `python mapped.py <file-path> <map-#>`.
 <br>
-Additional arguments include `--dir`, `--quiet`, `--alpha-threshold`, `--x-box-n`, and `--y-box-n`.
+Additional arguments include `--dir`, `--quiet`, `--alpha-threshold`, `--x-box-n`, `--y-box-n`, `--fit`, and `--help`.
 
 # How do I view it now that it's been generated?
 Enter any Minecraft world you have file-access rights to, and create a map.
