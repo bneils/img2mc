@@ -27,4 +27,7 @@ for row in table.find_all('tr')[1:]:
 with open(os.path.join(os.path.dirname(__file__), 'palette.csv'), 'w') as f:
     f.write(','.join(colors))
 
-print('updated palette.csv')
+print('updated palette.csv to be')
+for i in range(0, len(colors), 12):
+    channels = colors[i:i+12]
+    print(str(i // 12).rjust(2, '0'), ', '.join(['(' + ','.join([ch.rjust(3, '0') for ch in channels[i:i+3]]) + ')' for i in range(0, len(channels), 3)]))
