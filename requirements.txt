@@ -1,6 +1,6 @@
 numpy
 Pillow
 nbt
-
+tqdm
 bs4
 requests
