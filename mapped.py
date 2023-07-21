@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 __author__ = "Ben Neilsen"
 
-from PIL import Image
+from PIL import Image, ImageSequence
 from argparse import ArgumentParser
 from tqdm import tqdm
 import csv
@@ -17,27 +17,25 @@ with open('dev-tools/palette.csv') as f:
     palimage.putpalette(channels)
     numColors = len(channels) // 3
 
+def frameToMap(frame, alpha_threshold):
+    # Correct the list of map color ids (since it's not perfect)
+    # ID 34 is snow or (255,255,255).
+    # Since the palette only has 230ish colors (with the rest being (255,255,255), indices greater than 207 must be set to 34)
+    yield create_map(
+        [(i if i < numColors else 34) if alpha >= alpha_threshold else 0 for i, alpha in zip(*frame)]
+    )
+
 def imagenbt(image, fitScale=0, alpha_threshold=128, box_n=(1, 1)):
     """Creates a generator that yields NBT map(s) from an image"""
     
     # Extract frame(s) from image
     if 'loop' in image.info: # This image must be a GIF
-        frames = []
-        for i in range(image.n_frames):
-            image.seek(i)
-            frame = image.copy()
-            frames += partitionAndMap(frame, palimage, fitScale, box_n)
+        for imageFrame in tqdm(ImageSequence.Iterator(image), total=image.n_frames):
+            for frame in partitionAndMap(imageFrame, palimage, fitScale, box_n):
+                yield from frameToMap(frame, alpha_threshold)
     else:
-        frames = partitionAndMap(image, palimage, fitScale, box_n)
-
-    # Loop through frame(s)
-    for frame in tqdm(frames):
-        # Correct the list of map color ids (since it's not perfect)
-        # ID 34 is snow or (255,255,255).
-        # Since the palette only has 230ish colors (with the rest being (255,255,255), indices greater than 207 must be set to 34)
-        yield create_map(
-            [(i if i < numColors else 34) if alpha >= alpha_threshold else 0 for i, alpha in zip(*frame)]
-        )
+        for frame in partitionAndMap(imageFrame, palimage, fitScale, box_n):
+            yield from frameToMap(frame, alpha_threshold)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
