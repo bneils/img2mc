@@ -34,7 +34,7 @@ def imagenbt(image, fitScale=0, alpha_threshold=128, box_n=(1, 1)):
             for frame in partitionAndMap(imageFrame, palimage, fitScale, box_n):
                 yield from frameToMap(frame, alpha_threshold)
     else:
-        for frame in partitionAndMap(imageFrame, palimage, fitScale, box_n):
+        for frame in partitionAndMap(image, palimage, fitScale, box_n):
             yield from frameToMap(frame, alpha_threshold)
 
 if __name__ == '__main__':

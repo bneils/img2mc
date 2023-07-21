@@ -16,6 +16,8 @@ Then, invoke with `python mapped.py <image-path> <map-#>`.
 <br>
 Additional arguments include `--dir`, `--quiet`, `--alpha-threshold`, `--x-box-n`, `--y-box-n`, `--fit`, and `--help`.
 
+The alpha threshold parameter may unbreak certain images (or GIFs) that have a transparency channel you want to ignore.
+
 # How do I view it now that it's been generated?
 Enter any Minecraft world you have file-access rights to, and create a map.
 Hover over it in your inventory and it should say "#0", or any other number. This is the number that should've been specified when you generated the map. Navigate to the `data/` directory within your world, and place `map_0.dat` within the folder, replacing the map you just made.
