@@ -13,7 +13,7 @@ from helper import *
 # Initialize palette
 with open('dev-tools/palette.csv') as f:
     channels = [int(col) for row in csv.reader(f, delimiter=',') for col in row]
-    palimage = Image.new('P', (1, len(channels)))
+    palimage = Image.new('P', (0, 0))
     palimage.putpalette(channels)
     numColors = len(channels) // 3
 
@@ -22,7 +22,7 @@ def frameToMap(frame, alpha_threshold):
     # ID 34 is snow or (255,255,255).
     # Since the palette only has 230ish colors (with the rest being (255,255,255), indices greater than 207 must be set to 34)
     yield create_map(
-        [(i if i < numColors else 34) if alpha >= alpha_threshold else 0 for i, alpha in zip(*frame)]
+        [(i if 3*4 <= i < numColors else 34) if alpha >= alpha_threshold else 0 for i, alpha in zip(*frame)]
     )
 
 def imagenbt(image, fitScale=0, alpha_threshold=128, box_n=(1, 1)):
