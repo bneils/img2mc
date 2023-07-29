@@ -4,3 +4,5 @@ include/
 lib*/
 lib64
 pyvenv.cfg
+dev-tools/palette.csv
+*.dat
