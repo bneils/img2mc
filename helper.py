@@ -1,10 +1,12 @@
-from numpy import asarray
+import numpy as np
 from PIL import Image, features
 from PIL.Image import Quantize, Dither
 from math import ceil
 from nbt.nbt import *
 
 MAP_RESOLUTION = 128
+TRANSPARENT_START = 0 # Taken from the wiki
+TRANSPARENT_END_EXCL = 4 # 3 channels, 4 shades
 
 _quantize_method_names = {
     "off": Quantize.MEDIANCUT,
@@ -18,7 +20,8 @@ def get_palette_num_colors(palette_image):
     return len(palette_image.getpalette()) // 3
 
 def partition_image_to_map_items(
-    image, palette_image, scale_settings=(1, 1), quantize_method="median-cut"):
+    image, palette_image, scale_settings=(1, 1), quantize_method="median-cut",
+    alpha_threshold=128, transparency_color=TRANSPARENT_START):
     """Returns a list of tuples containing linear map ids and alpha values"""
 
     # Check args
@@ -27,6 +30,11 @@ def partition_image_to_map_items(
 
     # We need opacity to determine transparency
     image = image.convert("RGBA")
+
+    # A copy is made so that the original data isn't modified
+    # This is important for GIFs where the parameter will be used more than
+    # once.
+    scale_settings = list(scale_settings).copy()
 
     if scale_settings[0] is None or scale_settings[1] is None:
         if scale_settings[0] is None:
@@ -66,27 +74,30 @@ def partition_image_to_map_items(
                        scale_settings[1] * MAP_RESOLUTION)
         image = image.resize(canvas_size)
 
-    # Put pixels into rows and columns for easy partitioning
-    alphas = asarray(image.getdata(3)).reshape(image.size[::-1])
-
     # Convert user input to parameters for PIL.quantize
     dither = Dither.NONE if quantize_method == "off" else Dither.FLOYDSTEINBERG
     method = _quantize_method_names[quantize_method]
 
     if method == Quantize.LIBIMAGEQUANT and not \
         features.check_feature("libimagequant"):
-        print(features.check_feature("libimagequant"))
-        raise ValueError("Your system likely does not support libimagequant.")
+        raise ValueError("Your environment likely does not support " +
+                         "libimagequant.")
 
-    map_ids = asarray(image.convert('RGB').quantize(palette=palette_image,
+    # Put pixels into rows and columns for easy partitioning
+    map_ids = np.asarray(image.convert('RGB').quantize(palette=palette_image,
         colors=get_palette_num_colors(palette_image), dither=dither,
-        method=method))
+        method=method)) + TRANSPARENT_END_EXCL
+    map_ids = np.ravel(map_ids)
 
-    # Now use NumPy's matrix slicing and then convert it to a linear array
-    # The tuple represents the array of indices and alphas
+    # Perform some masking using the alpha threshold
+    alphas = np.asarray(image.getdata(3))
+    map_id_alpha_pairs = np.dstack((map_ids, alphas))[0]
+    map_id_alpha_pairs[alphas <= alpha_threshold, 0] = transparency_color
+    map_ids = map_id_alpha_pairs[:, 0].reshape(image.size[::-1])
+
+    # Split the map id matrix into smaller 128x128 squares
     return [
-        (map_ids[y:y + 128, x:x + 128].reshape(128*128),
-         alphas[y:y + 128, x:x + 128].reshape(128*128))
+        map_ids[y:y + 128, x:x + 128].reshape(128 * 128)
         for y in range(0, image.height, 128)
         for x in range(0, image.width, 128)
     ]

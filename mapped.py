@@ -7,11 +7,11 @@ from argparse import ArgumentParser
 from tqdm import tqdm
 import os
 import sys
+import numpy as np
 
 from helper import *
 
-TRANSPARENT_START = 0 # Taken from the wiki
-TRANSPARENT_END_EXCL = 4 # 3 channels, 4 shades
+TRANSPARENCY_ID_USED = TRANSPARENT_START
 
 def hex_color_to_tuple(color: str):
     if color[0] == "#":
@@ -39,28 +39,8 @@ def load_palette():
         palette_image.putpalette(channels)
     return palette_image
 
-def matched_color_to_map_color(color, alpha, alpha_threshold,
-                               override_transparency=None):
-    if alpha < alpha_threshold:
-        return TRANSPARENT_START if not override_transparency else \
-            override_transparency + TRANSPARENT_END_EXCL
-    # This adjustment needs to be made since we removed the beginning of the
-    # palette that didn't have any color
-    return color + TRANSPARENT_END_EXCL
-
-def map_item_to_nbt_file(frame, alpha_threshold, override_transparency=None):
-    # Correct the list of map color ids (since it's not perfect)
-    # ID 34 is snow or (255,255,255).
-    # Since the palette only has 230ish colors and the rest are #FFFFFF,
-    # indices greater than 207 must be set to 34, aka #FFFFFF
-    yield create_map(
-        matched_color_to_map_color(color, alpha, alpha_threshold,
-                                   override_transparency)
-        for color, alpha in zip(*frame)
-    )
-
 def image_to_nbt(image, palette_image, alpha_threshold=128, scale_dim=(1, 1),
-                 quantize_method="median-cut", override_transparency=None):
+                 quantize_method="median-cut"):
     """Creates a generator that yields NBT map(s) from an image"""
     # Extract frame(s) from image
     # If it's a GIF, it will process more than one frame.
@@ -72,10 +52,11 @@ def image_to_nbt(image, palette_image, alpha_threshold=128, scale_dim=(1, 1),
     # TODO: This tqdm call would be better if it measured map-wise instead of
     #       frame-wise for GIFs.
     for image_frame in tqdm(ImageSequence.Iterator(image), total=n_frames):
-        for frame in partition_image_to_map_items(image_frame, palette_image,
-                                                  scale_dim, quantize_method):
-            yield from map_item_to_nbt_file(frame, alpha_threshold,
-                                            override_transparency)
+        for map_ids in partition_image_to_map_items(image_frame, palette_image,
+                                                  scale_dim, quantize_method,
+                                                  alpha_threshold,
+                                                  TRANSPARENCY_ID_USED):
+            yield create_map(map_ids)
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -145,15 +126,14 @@ if __name__ == '__main__':
         print("Error: selected quantize method is unrecognized.")
         sys.exit(1)
 
-    override_color = \
-        match_color(hex_color_to_tuple(args.override), palette_image) \
-        if args.override else \
-        None
+    if args.override:
+        TRANSPARENCY_ID_USED = match_color(
+                hex_color_to_tuple(args.override),
+                palette_image) + TRANSPARENT_END_EXCL
 
     try:
         for nbt_file in image_to_nbt(image, palette_image, args.alpha_threshold,
-                                     scale_dim, args.quantize_method,
-                                     override_transparency=override_color):
+                                     scale_dim, args.quantize_method):
             nbt_file.write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
             args.num += 1
     
