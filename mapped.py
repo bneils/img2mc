@@ -11,6 +11,7 @@ import numpy as np
 
 from helper import *
 
+sys.path.append("dev-tools")
 TRANSPARENCY_ID_USED = TRANSPARENT_START
 
 def hex_color_to_tuple(color: str):
@@ -28,8 +29,13 @@ def match_color(color, palette_image):
 
 def load_palette():
     script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    palette_path = os.path.join(script_dir, "dev-tools/palette.csv")
 
-    with open(os.path.join(script_dir, "dev-tools/palette.csv"), "r") as f:
+    if not os.path.exists(palette_path):
+        from generate_palette import download_palette
+        download_palette()
+
+    with open(palette_path) as f:
         channels = [int(num) for num in f.read().split(",")]
         # Truncate the beginning transparency section from the palette
         channels = channels[TRANSPARENT_END_EXCL * 3:]
