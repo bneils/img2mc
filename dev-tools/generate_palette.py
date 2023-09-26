@@ -8,7 +8,7 @@ import os
 import sys
 
 def download_palette():
-    doc = requests.get('https://minecraft.fandom.com/wiki/Map_item_format')
+    doc = requests.get('https://minecraft.wiki/w/Map_item_format')
     if doc.status_code != 200:
         sys.stderr.write("Couldn't access wiki with status code %d.\n" % doc.status_code)
         return
