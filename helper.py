@@ -105,7 +105,7 @@ def partition_image_to_map_items(
 
 def create_map(map_color_ids):
     # Begin constructing the NBT file described at
-    # https://minecraft.gamepedia.com/Map_item_format#map_.3C.23.3E.dat_format
+    # https://minecraft.wiki/w/Map_item_format#map_.3C.23.3E.dat_format
     map_color_ids = list(map_color_ids)
 
     nbt_file = NBTFile()
