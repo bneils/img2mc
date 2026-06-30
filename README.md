@@ -45,9 +45,9 @@ If you supply the script with a GIF, then it will process every frame regardless
 # How do I view it now that it's been generated?
 Enter any Minecraft world you have file-access rights to, and create a number of maps.
 If you have 3 map files and started at map #0, you want to generate or have generated maps #0 to #2.
-Exit and save the world and override the map files in the `data` directory with the ones you generated.
+Exit and save the world and override the map files in the `data/minecraft/maps` directory with the ones you generated.
 
-If you want to reset all the maps, then delete any files in `data` that start with `map_` and `idcounts.dat` (which holds the newest map id)
+If you want to reset all the maps, then delete any files in `data/minecraft/maps` that are `<num>.dat` and `last_id.dat` (which holds the newest map id)
 
 # Example
 ![Andromeda viewed in a map](https://github.com/bneils/minecraft-map-maker/blob/main/andromeda_example.png)

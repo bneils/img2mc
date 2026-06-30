@@ -140,7 +140,7 @@ if __name__ == '__main__':
     try:
         for nbt_file in image_to_nbt(image, palette_image, args.alpha_threshold,
                                      scale_dim, args.quantize_method):
-            nbt_file.write_file(os.path.join(args.dir, 'map_%d.dat' % args.num))
+            nbt_file.write_file(os.path.join(args.dir, '%d.dat' % args.num))
             args.num += 1
 
     except (FileNotFoundError, KeyboardInterrupt) as e:
